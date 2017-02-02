@@ -61,23 +61,30 @@ class GPTools:
     def shift(self, direction):
         for track, _, _, beat in self.copied():
             for note in beat.notes:
-                note_string = note.string - 1
                 if direction == 'up':
-                    if note_string == 0:
-                        continue
-                    string_interval = track.strings[note_string-1].value - track.strings[note_string].value
-                    if note.value < string_interval:
-                        continue
-                    note.string -= 1
-                    note.value -= string_interval
+                    self.shift_up(track, note)
                 elif direction == 'down':
-                    if note_string == len(track.strings) - 1:
-                        continue
-                    string_interval = track.strings[note_string].value - track.strings[note_string+1].value
-                    if note.value > 30 - string_interval:
-                        continue
-                    note.string += 1
-                    note.value += string_interval
+                    self.shift_down(track, note)
+
+    def shift_up(self, track, note):
+        note_string = note.string - 1
+        if note_string == 0:
+            return
+        string_interval = track.strings[note_string-1].value - track.strings[note_string].value
+        if note.value < string_interval:
+            return
+        note.string -= 1
+        note.value -= string_interval
+
+    def shift_down(self, track, note):
+        note_string = note.string - 1
+        if note_string == len(track.strings) - 1:
+            return
+        string_interval = track.strings[note_string].value - track.strings[note_string+1].value
+        if note.value > 30 - string_interval:
+            return
+        note.string += 1
+        note.value += string_interval
 
     def copied(self):
         for track in self.copied_tracks():
