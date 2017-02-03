@@ -19,10 +19,12 @@ DIRNAME = os.path.dirname(__file__)
     ('test_duration_mul_2.gp5', partial(GPTools.modify_duration, operation='mul', factor=2)),
     ('test_duration_div_4.gp5', partial(GPTools.modify_duration, operation='div', factor=4)),
 
-    ('test_stroke_down_32.gp5', partial(GPTools.stroke, direction='down', duration=32)),
+    ('test_brush_down_32.gp5', partial(GPTools.brush, direction='down', duration=32)),
 
-    ('test_remove_stroke.gp5', partial(GPTools.remove, target='stroke')),
-    ('test_remove_text.gp5', partial(GPTools.remove, target='text')),
+    ('test_pick_stroke_down.gp5', partial(GPTools.pick_stroke, direction='up')),
+
+    ('test_brush_remove.gp5', partial(GPTools.remove, target='brush')),
+    ('test_text_remove.gp5', partial(GPTools.remove, target='text')),
 ])
 def test_tools(test_tab, method):
     gptools = GPTools(os.path.join(DIRNAME, test_tab), None, [1])

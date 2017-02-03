@@ -49,7 +49,12 @@ def cli(ctx, input, output, tracks, measures, beats):
     ctx.obj = GPTools(input, output, tracks, measures, beats)
 
 
-@cli.group(help='Shift notes to upper or lower string.')
+@cli.group(help='Modify selected notes.')
+def note():
+    pass
+
+
+@note.group(help='Shift notes to upper or lower string.')
 def shift():
     pass
 
@@ -72,7 +77,7 @@ def shift_down(gptools, amount):
     gptools.write()
 
 
-@cli.group(help='Multiply or divide duration by given factor.')
+@note.group(help='Multiply or divide duration by given factor.')
 def duration():
     pass
 
@@ -95,35 +100,76 @@ def duration_div(gptools, factor):
     gptools.write()
 
 
-@cli.group(help='Stroke beats up or down with given speed.')
-def stroke():
+@note.group(help='Set or remove brush stroke.')
+def brush():
     pass
 
 
-@stroke.command('up')
+@brush.command('up', help='Brush up.')
 @click.argument('duration', type=click.IntRange(4, 128), callback=validate_power_of_two)
 @click.pass_obj
-def stroke_up(gptools, duration):
+def brush_up(gptools, duration):
     gptools.parse()
-    gptools.stroke('up', duration)
+    gptools.brush('up', duration)
     gptools.write()
 
 
-@stroke.command('down')
+@brush.command('down', help='Brush down.')
 @click.argument('duration', type=click.IntRange(4, 128), callback=validate_power_of_two)
 @click.pass_obj
-def stroke_down(gptools, duration):
+def brush_down(gptools, duration):
     gptools.parse()
-    gptools.stroke('down', duration)
+    gptools.brush('down', duration)
     gptools.write()
 
 
-@cli.command('rm', help='Remove some properties of a beat.')
-@click.argument('target', type=click.Choice(['stroke', 'text']))
+@brush.command('rm', help='Remove brush stroke.')
 @click.pass_obj
-def remove(gptools, target):
+def brush_remove(gptools, duration):
     gptools.parse()
-    gptools.remove(target)
+    gptools.remove('brush')
+    gptools.write()
+
+
+@note.group('pick-stroke', help='Pick stroke up or down.')
+def pick_stroke():
+    pass
+
+
+@pick_stroke.command('up')
+@click.pass_obj
+def pick_stroke_up(gptools, duration):
+    gptools.parse()
+    gptools.pick_stroke('up', duration)
+    gptools.write()
+
+
+@pick_stroke.command('down')
+@click.pass_obj
+def pick_stroke_down(gptools, duration):
+    gptools.parse()
+    gptools.pick_stroke('down', duration)
+    gptools.write()
+
+
+@pick_stroke.command('rm', help='Remove pick stroke.')
+@click.pass_obj
+def pick_stroke_remove(gptools, duration):
+    gptools.parse()
+    gptools.remove('pick_stroke')
+    gptools.write()
+
+
+@note.group(help='Manipulate beat text.')
+def text():
+    pass
+
+
+@text.command('rm', help='Remove text from selected beats.')
+@click.pass_obj
+def text_remove(gptools):
+    gptools.parse()
+    gptools.remove('text')
     gptools.write()
 
 
@@ -221,18 +267,26 @@ class GPTools:
             modified_time = modifier(time)
             beat.duration = Duration.fromTime(modified_time, minimum=Duration(Duration.sixtyFourth))
 
-    def stroke(self, direction, duration):
+    def brush(self, direction, duration):
+        bd = self.parse_stroke_direction(direction)
         for _, _, _, beat in self.selected():
-            if direction == 'up':
-                bd = BeatStrokeDirection.down
-            elif direction == 'down':
-                bd = BeatStrokeDirection.up
             beat.effect.stroke.direction = bd
             beat.effect.stroke.value = duration
 
+    def pick_stroke(self, direction):
+        bd = self.parse_stroke_direction(direction)
+        for _, _, _, beat in self.selected():
+            beat.effect.pickStroke = bd
+
+    def parse_stroke_direction(self, direction):
+        if direction == 'up':
+            return BeatStrokeDirection.down
+        elif direction == 'down':
+            return BeatStrokeDirection.up
+
     def remove(self, target):
         for _, _, _, beat in self.selected():
-            if target == 'stroke':
+            if target == 'brush':
                 beat.effect.stroke = BeatStroke()
             elif target == 'text':
                 beat.text = None
