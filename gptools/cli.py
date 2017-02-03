@@ -49,33 +49,72 @@ def cli(ctx, input, output, tracks, measures, beats):
     ctx.obj = GPTools(input, output, tracks, measures, beats)
 
 
-@cli.command(help='Shift notes to upper or lower string.')
-@click.argument('direction', type=click.Choice(['up', 'down']))
-@click.argument('times', type=int, default=1)
+@cli.group(help='Shift notes to upper or lower string.')
+def shift():
+    pass
+
+
+@shift.command('up')
+@click.argument('amount', type=int)
 @click.pass_obj
-def shift(gptools, direction, times):
+def shift_up(gptools, amount):
     gptools.parse()
-    gptools.shift(direction, times)
+    gptools.shift('up', amount)
     gptools.write()
 
 
-@cli.command(help='Multiply or divide duration by given factor.')
-@click.argument('operation', type=click.Choice(['mul', 'div']))
+@shift.command('down')
+@click.argument('amount', type=int)
+@click.pass_obj
+def shift_down(gptools, amount):
+    gptools.parse()
+    gptools.shift('down', amount)
+    gptools.write()
+
+
+@cli.group(help='Multiply or divide duration by given factor.')
+def duration():
+    pass
+
+
+@duration.command('mul')
 @click.argument('factor', type=int)
 @click.pass_obj
-def duration(gptools, operation, factor):
+def duration_mul(gptools, factor):
     gptools.parse()
-    gptools.modify_duration(operation, factor)
+    gptools.modify_duration('mul', factor)
     gptools.write()
 
 
-@cli.command(help='Stroke beats up or down with given speed.')
-@click.argument('direction', type=click.Choice(['up', 'down']))
+@duration.command('div')
+@click.argument('factor', type=int)
+@click.pass_obj
+def duration_div(gptools, factor):
+    gptools.parse()
+    gptools.modify_duration('div', factor)
+    gptools.write()
+
+
+@cli.group(help='Stroke beats up or down with given speed.')
+def stroke():
+    pass
+
+
+@stroke.command('up')
 @click.argument('duration', type=click.IntRange(4, 128), callback=validate_power_of_two)
 @click.pass_obj
-def stroke(gptools, direction, duration):
+def stroke_up(gptools, duration):
     gptools.parse()
-    gptools.stroke(direction, duration)
+    gptools.stroke('up', duration)
+    gptools.write()
+
+
+@stroke.command('down')
+@click.argument('duration', type=click.IntRange(4, 128), callback=validate_power_of_two)
+@click.pass_obj
+def stroke_down(gptools, duration):
+    gptools.parse()
+    gptools.stroke('down', duration)
     gptools.write()
 
 
@@ -138,18 +177,18 @@ class GPTools:
         format = None if self.song.clipboard is None else 'tmp'
         guitarpro.write(self.song, self.output_file, format=format)
 
-    def shift(self, direction, times=1):
+    def shift(self, direction, amount=1):
         for track, _, _, beat in self.selected():
             if track.isPercussionTrack:
                 continue
             for note in beat.notes:
                 if direction == 'up':
-                    self.shift_up(track, note, times)
+                    self.shift_up(track, note, amount)
                 elif direction == 'down':
-                    self.shift_down(track, note, times)
+                    self.shift_down(track, note, amount)
 
-    def shift_up(self, track, note, times):
-        for _ in range(times):
+    def shift_up(self, track, note, amount):
+        for _ in range(amount):
             note_string = note.string - 1
             if note_string == 0:
                 return
@@ -159,8 +198,8 @@ class GPTools:
             note.string -= 1
             note.value -= string_interval
 
-    def shift_down(self, track, note, times):
-        for _ in range(times):
+    def shift_down(self, track, note, amount):
+        for _ in range(amount):
             note_string = note.string - 1
             if note_string == len(track.strings) - 1:
                 return

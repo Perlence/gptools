@@ -12,8 +12,8 @@ DIRNAME = os.path.dirname(__file__)
     ('test_shift_up.gp5', partial(GPTools.shift, direction='up')),
     ('test_shift_down.gp5', partial(GPTools.shift, direction='down')),
     ('test_shift_percussion.gp5', partial(GPTools.shift, direction='up')),
-    ('test_shift_up_5.gp5', partial(GPTools.shift, direction='up', times=5)),
-    ('test_shift_down_5.gp5', partial(GPTools.shift, direction='down', times=5)),
+    ('test_shift_up_5.gp5', partial(GPTools.shift, direction='up', amount=5)),
+    ('test_shift_down_5.gp5', partial(GPTools.shift, direction='down', amount=5)),
 
     ('test_duration_div_2.gp5', partial(GPTools.modify_duration, operation='div', factor=2)),
     ('test_duration_mul_2.gp5', partial(GPTools.modify_duration, operation='mul', factor=2)),
