@@ -29,7 +29,7 @@ class Range(click.ParamType):
 def validate_power_of_two(ctx, param, value):
     log2 = math.log(value, 2)
     if math.floor(log2) != log2:
-        raise click.BadParameter('must be a power 2 integer')
+        raise click.BadParameter('must be a power of 2 integer')
     return value
 
 
@@ -50,27 +50,22 @@ def compose(*fns):
 
 
 @click.group()
-@click.option('-i', '--input', metavar='FILE',
-              type=click.Path(exists=True),
-              help='File to edit, taken from clipboard by default.')
-@click.option('-o', '--output', metavar='FILE',
-              type=click.Path(exists=True),
+@click.option('-i', '--input', metavar='PATH', type=click.Path(exists=True),
+              help='File to edit, edit Guitar Pro clipboard by default.')
+@click.option('-o', '--output', metavar='PATH', type=click.Path(exists=True),
               help='Save edited file here, edit in-place by default.')
-@click.option('-t', '--tracks', metavar='RANGE',
-              type=Range(),
+@click.option('-t', '--tracks', metavar='RANGE', type=Range(),
               help="Range of tracks to edit, e.g '1-4,6-7', default range is taken from clipboard.")
-@click.option('-m', '--measures', metavar='RANGE',
-              type=Range(),
+@click.option('-m', '--measures', metavar='RANGE', type=Range(),
               help='Range of measures to edit, default range is taken from clipboard.')
-@click.option('-b', '--beats', metavar='RANGE',
-              type=Range(),
+@click.option('-b', '--beats', metavar='RANGE', type=Range(),
               help='Range of beats to edit, default range is taken from clipboard.')
 @click.pass_context
 def cli(ctx, input, output, tracks, measures, beats):
     ctx.obj = GPTools(input, output, tracks, measures, beats)
 
 
-@cli.command()
+@cli.command(help='Shift notes 1 string up or down.')
 @click.argument('direction', type=click.Choice(['up', 'down']))
 @click.pass_obj
 def shift(gptools, direction):
@@ -79,7 +74,7 @@ def shift(gptools, direction):
     gptools.write()
 
 
-@cli.command()
+@cli.command(help='Multiply or divide duration by given factor.')
 @click.argument('operation', type=click.Choice(['mul', 'div']))
 @click.argument('factor', type=int)
 @click.pass_obj
@@ -89,7 +84,7 @@ def duration(gptools, operation, factor):
     gptools.write()
 
 
-@cli.command()
+@cli.command(help='Stroke beats up or down with given speed.')
 @click.argument('direction', type=click.Choice(['up', 'down']))
 @click.argument('duration', type=int, callback=compose(validate_power_of_two, validate_range(4, 128)))
 @click.pass_obj
@@ -99,7 +94,7 @@ def stroke(gptools, direction, duration):
     gptools.write()
 
 
-@cli.command('rm')
+@cli.command('rm', help='Remove some properties of a beat.')
 @click.argument('target', type=click.Choice(['stroke', 'text']))
 @click.pass_obj
 def remove(gptools, target):
