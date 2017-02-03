@@ -3,6 +3,7 @@ import os
 import attr
 import click
 import guitarpro
+from guitarpro.base import Duration
 import psutil
 
 ALL = object()
@@ -53,6 +54,16 @@ def cli(ctx, input, output, tracks, measures, beats):
 def shift(gptools, direction):
     gptools.parse()
     gptools.shift(direction)
+    gptools.write()
+
+
+@cli.command()
+@click.argument('operation', type=click.Choice(['mul', 'div']))
+@click.argument('factor', type=int)
+@click.pass_obj
+def duration(gptools, operation, factor):
+    gptools.parse()
+    gptools.modify_duration(operation, factor)
     gptools.write()
 
 
@@ -132,6 +143,18 @@ class GPTools:
             return
         note.string += 1
         note.value += string_interval
+
+    def modify_duration(self, operation, factor):
+        def modifier(time):
+            if operation == 'mul':
+                return time * factor
+            elif operation == 'div':
+                return time // factor
+
+        for _, _, _, beat in self.selected():
+            time = beat.duration.time
+            modified_time = modifier(time)
+            beat.duration = Duration.fromTime(modified_time, minimum=Duration(Duration.sixtyFourth))
 
     def selected(self):
         for track in self.selected_tracks():
