@@ -1,9 +1,10 @@
 import os
+import math
 
 import attr
 import click
 import guitarpro
-from guitarpro.base import Duration
+from guitarpro.base import Duration, BeatStrokeDirection
 import psutil
 
 ALL = object()
@@ -23,6 +24,29 @@ class Range(click.ParamType):
                 start, stop = map(int, range_parts)
                 result.extend(list(range(start, stop+1)))
         return result
+
+
+def validate_power_of_two(ctx, param, value):
+    log2 = math.log(value, 2)
+    if math.floor(log2) != log2:
+        raise click.BadParameter('must be a power 2 integer')
+    return value
+
+
+def validate_range(start, stop):
+    def callback(ctx, param, value):
+        if not start <= value <= stop:
+            raise click.BadParameter('must be in range {} <= {} <= {}'.format(start, value, stop))
+        return value
+    return callback
+
+
+def compose(*fns):
+    def callback(ctx, param, value):
+        for fn in fns:
+            value = fn(ctx, param, value)
+        return value
+    return callback
 
 
 @click.group()
@@ -62,6 +86,16 @@ def shift(gptools, direction):
 def duration(gptools, operation, factor):
     gptools.parse()
     gptools.modify_duration(operation, factor)
+    gptools.write()
+
+
+@cli.command()
+@click.argument('direction', type=click.Choice(['up', 'down']))
+@click.argument('duration', type=int, callback=compose(validate_power_of_two, validate_range(4, 128)))
+@click.pass_obj
+def stroke(gptools, direction, duration):
+    gptools.parse()
+    gptools.stroke(direction, duration)
     gptools.write()
 
 
@@ -112,9 +146,7 @@ class GPTools:
         return clipboard_path
 
     def write(self):
-        format = None
-        if self.song.clipboard is not None:
-            format = 'tmp'
+        format = None if self.song.clipboard is None else 'tmp'
         guitarpro.write(self.song, self.output_file, format=format)
 
     def shift(self, direction):
@@ -158,6 +190,15 @@ class GPTools:
             time = beat.duration.time
             modified_time = modifier(time)
             beat.duration = Duration.fromTime(modified_time, minimum=Duration(Duration.sixtyFourth))
+
+    def stroke(self, direction, duration):
+        for _, _, _, beat in self.selected():
+            if direction == 'up':
+                bd = BeatStrokeDirection.down
+            elif direction == 'down':
+                bd = BeatStrokeDirection.up
+            beat.effect.stroke.direction = bd
+            beat.effect.stroke.value = duration
 
     def selected(self):
         for track in self.selected_tracks():
