@@ -1,7 +1,8 @@
 import click
 
-from .tools import GPTools
+from .effect import mount_effect_tools
 from .note import mount_note_tools
+from .tools import GPTools
 
 
 class Range(click.ParamType):
@@ -37,3 +38,4 @@ def cli(ctx, input, output, tracks, measures, beats):
 
 
 mount_note_tools(cli)
+mount_effect_tools(cli)

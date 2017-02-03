@@ -132,7 +132,6 @@ def validate_power_of_two(ctx, param, value):
     return value
 
 
-@attr.s
 class NoteTools(GPTools):
     def shift(self, direction, amount=1):
         for track, _, _, beat in self.selected():
