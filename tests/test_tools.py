@@ -11,6 +11,7 @@ DIRNAME = os.path.dirname(__file__)
 @pytest.mark.parametrize('test_tab, method', [
     ('test_shift_up.gp5', partial(GPTools.shift, direction='up')),
     ('test_shift_down.gp5', partial(GPTools.shift, direction='down')),
+    ('test_shift_percussion.gp5', partial(GPTools.shift, direction='up')),
 ])
 def test_tools(test_tab, method):
     gptools = GPTools(os.path.join(DIRNAME, test_tab), None, [1])

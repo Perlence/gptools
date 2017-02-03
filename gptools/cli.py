@@ -105,6 +105,8 @@ class GPTools:
 
     def shift(self, direction):
         for track, _, _, beat in self.selected():
+            if track.isPercussionTrack:
+                continue
             for note in beat.notes:
                 if direction == 'up':
                     self.shift_up(track, note)
