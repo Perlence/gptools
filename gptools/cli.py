@@ -65,12 +65,13 @@ def cli(ctx, input, output, tracks, measures, beats):
     ctx.obj = GPTools(input, output, tracks, measures, beats)
 
 
-@cli.command(help='Shift notes 1 string up or down.')
+@cli.command(help='Shift notes to upper or lower string.')
 @click.argument('direction', type=click.Choice(['up', 'down']))
+@click.argument('times', type=int, default=1)
 @click.pass_obj
-def shift(gptools, direction):
+def shift(gptools, direction, times):
     gptools.parse()
-    gptools.shift(direction)
+    gptools.shift(direction, times)
     gptools.write()
 
 
@@ -153,35 +154,37 @@ class GPTools:
         format = None if self.song.clipboard is None else 'tmp'
         guitarpro.write(self.song, self.output_file, format=format)
 
-    def shift(self, direction):
+    def shift(self, direction, times=1):
         for track, _, _, beat in self.selected():
             if track.isPercussionTrack:
                 continue
             for note in beat.notes:
                 if direction == 'up':
-                    self.shift_up(track, note)
+                    self.shift_up(track, note, times)
                 elif direction == 'down':
-                    self.shift_down(track, note)
+                    self.shift_down(track, note, times)
 
-    def shift_up(self, track, note):
-        note_string = note.string - 1
-        if note_string == 0:
-            return
-        string_interval = track.strings[note_string-1].value - track.strings[note_string].value
-        if note.value < string_interval:
-            return
-        note.string -= 1
-        note.value -= string_interval
+    def shift_up(self, track, note, times):
+        for _ in range(times):
+            note_string = note.string - 1
+            if note_string == 0:
+                return
+            string_interval = track.strings[note_string-1].value - track.strings[note_string].value
+            if note.value < string_interval:
+                return
+            note.string -= 1
+            note.value -= string_interval
 
-    def shift_down(self, track, note):
-        note_string = note.string - 1
-        if note_string == len(track.strings) - 1:
-            return
-        string_interval = track.strings[note_string].value - track.strings[note_string+1].value
-        if note.value > 30 - string_interval:
-            return
-        note.string += 1
-        note.value += string_interval
+    def shift_down(self, track, note, times):
+        for _ in range(times):
+            note_string = note.string - 1
+            if note_string == len(track.strings) - 1:
+                return
+            string_interval = track.strings[note_string].value - track.strings[note_string+1].value
+            if note.value > 30 - string_interval:
+                return
+            note.string += 1
+            note.value += string_interval
 
     def modify_duration(self, operation, factor):
         def modifier(time):
