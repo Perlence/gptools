@@ -33,22 +33,6 @@ def validate_power_of_two(ctx, param, value):
     return value
 
 
-def validate_range(start, stop):
-    def callback(ctx, param, value):
-        if not start <= value <= stop:
-            raise click.BadParameter('must be in range {} <= {} <= {}'.format(start, value, stop))
-        return value
-    return callback
-
-
-def compose(*fns):
-    def callback(ctx, param, value):
-        for fn in fns:
-            value = fn(ctx, param, value)
-        return value
-    return callback
-
-
 @click.group()
 @click.option('-i', '--input', metavar='PATH', type=click.Path(exists=True),
               help='File to edit, edit Guitar Pro clipboard by default.')
@@ -87,7 +71,7 @@ def duration(gptools, operation, factor):
 
 @cli.command(help='Stroke beats up or down with given speed.')
 @click.argument('direction', type=click.Choice(['up', 'down']))
-@click.argument('duration', type=int, callback=compose(validate_power_of_two, validate_range(4, 128)))
+@click.argument('duration', type=click.IntRange(4, 128), callback=validate_power_of_two)
 @click.pass_obj
 def stroke(gptools, direction, duration):
     gptools.parse()
