@@ -4,7 +4,7 @@ import math
 import attr
 import click
 import guitarpro
-from guitarpro.base import Duration, BeatStrokeDirection
+from guitarpro.base import Duration, BeatStroke, BeatStrokeDirection
 import psutil
 
 ALL = object()
@@ -96,6 +96,15 @@ def duration(gptools, operation, factor):
 def stroke(gptools, direction, duration):
     gptools.parse()
     gptools.stroke(direction, duration)
+    gptools.write()
+
+
+@cli.command('rm')
+@click.argument('target', type=click.Choice(['stroke', 'text']))
+@click.pass_obj
+def remove(gptools, target):
+    gptools.parse()
+    gptools.remove(target)
     gptools.write()
 
 
@@ -199,6 +208,13 @@ class GPTools:
                 bd = BeatStrokeDirection.up
             beat.effect.stroke.direction = bd
             beat.effect.stroke.value = duration
+
+    def remove(self, target):
+        for _, _, _, beat in self.selected():
+            if target == 'stroke':
+                beat.effect.stroke = BeatStroke()
+            elif target == 'text':
+                beat.text = None
 
     def selected(self):
         for track in self.selected_tracks():
