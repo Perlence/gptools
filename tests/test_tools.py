@@ -25,6 +25,8 @@ DIRNAME = os.path.dirname(__file__)
 
     ('test_brush_remove.gp5', partial(GPTools.remove, target='brush')),
     ('test_text_remove.gp5', partial(GPTools.remove, target='text')),
+
+    ('test_replace_with_rests.gp5', GPTools.replace_with_rests),
 ])
 def test_tools(test_tab, method):
     gptools = GPTools(os.path.join(DIRNAME, test_tab), None, [1])

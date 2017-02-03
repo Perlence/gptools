@@ -4,7 +4,7 @@ import math
 import attr
 import click
 import guitarpro
-from guitarpro.base import Duration, BeatStroke, BeatStrokeDirection
+from guitarpro.base import Duration, Beat, BeatStatus, BeatStroke, BeatStrokeDirection
 import psutil
 
 ALL = object()
@@ -173,6 +173,14 @@ def text_remove(gptools):
     gptools.write()
 
 
+@note.command(help='Replace all selected notes with rests.')
+@click.pass_obj
+def rest(gptools):
+    gptools.parse()
+    gptools.replace_with_rests()
+    gptools.write()
+
+
 @attr.s
 class GPTools:
     input_file = attr.ib()
@@ -290,6 +298,11 @@ class GPTools:
                 beat.effect.stroke = BeatStroke()
             elif target == 'text':
                 beat.text = None
+
+    def replace_with_rests(self):
+        for _, _, voice, beat in self.selected():
+            i = voice.beats.index(beat)
+            voice.beats[i] = Beat(duration=beat.duration, status=BeatStatus.rest)
 
     def selected(self):
         for track in self.selected_tracks():
