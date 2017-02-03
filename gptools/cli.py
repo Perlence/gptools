@@ -78,6 +78,8 @@ class GPTools:
     def parse(self):
         if self.input_file is None:
             self.input_file = self.find_clipboard()
+        if self.output_file is None:
+            self.output_file = self.input_file
 
         self.song = guitarpro.parse(self.input_file)
 
@@ -110,7 +112,10 @@ class GPTools:
         return clipboard_path
 
     def write(self):
-        guitarpro.write(self.song, self.output_file)
+        format = None
+        if self.song.clipboard is not None:
+            format = 'tmp'
+        guitarpro.write(self.song, self.output_file, format=format)
 
     def shift(self, direction):
         for track, _, _, beat in self.selected():
