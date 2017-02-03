@@ -32,19 +32,17 @@ class Range(click.ParamType):
 @click.option('-o', '--output', metavar='FILE',
               type=click.Path(exists=True),
               help='Save edited file here, edit in-place by default.')
-@click.option('-t', '--tracks',
+@click.option('-t', '--tracks', metavar='RANGE',
               type=Range(),
               help="Range of tracks to edit, e.g '1-4,6-7', default range is taken from clipboard.")
-@click.option('-m', '--measures',
+@click.option('-m', '--measures', metavar='RANGE',
               type=Range(),
               help='Range of measures to edit, default range is taken from clipboard.')
-@click.option('-b', '--beats',
+@click.option('-b', '--beats', metavar='RANGE',
               type=Range(),
               help='Range of beats to edit, default range is taken from clipboard.')
 @click.pass_context
 def cli(ctx, input, output, tracks, measures, beats):
-    if not output:
-        output = input
     ctx.obj = GPTools(input, output, tracks, measures, beats)
 
 
